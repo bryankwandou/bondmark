@@ -1,0 +1,696 @@
+{
+  "address": "5qbPy6p44mp8r73vNwmzMmzzSwGMm9veiwrSDgnyPctG",
+  "metadata": {
+    "name": "bondmark",
+    "version": "0.1.0",
+    "spec": "0.1.0",
+    "description": "Created with Anchor"
+  },
+  "docs": [
+    "Bondmark keeps a seller's own money on the line behind their storefront.",
+    "Everything a buyer needs in order to judge a seller lives in these accounts,",
+    "so the badge can be checked without trusting the company that issued it."
+  ],
+  "instructions": [
+    {
+      "name": "deposit_bond",
+      "docs": [
+        "Move lamports into the record. This is what the badge actually shows."
+      ],
+      "discriminator": [
+        120,
+        89,
+        18,
+        253,
+        112,
+        125,
+        87,
+        255
+      ],
+      "accounts": [
+        {
+          "name": "owner",
+          "writable": true,
+          "signer": true,
+          "relations": [
+            "seller"
+          ]
+        },
+        {
+          "name": "seller",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  115,
+                  101,
+                  108,
+                  108,
+                  101,
+                  114
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "seller.handle",
+                "account": "Seller"
+              }
+            ]
+          }
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "amount",
+          "type": "u64"
+        }
+      ]
+    },
+    {
+      "name": "open_dispute",
+      "docs": [
+        "File a claim. Anyone but the seller may do this; the deposit stays put",
+        "until the claim is ruled on."
+      ],
+      "discriminator": [
+        137,
+        25,
+        99,
+        119,
+        23,
+        223,
+        161,
+        42
+      ],
+      "accounts": [
+        {
+          "name": "buyer",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "seller",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  115,
+                  101,
+                  108,
+                  108,
+                  101,
+                  114
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "seller.handle",
+                "account": "Seller"
+              }
+            ]
+          }
+        },
+        {
+          "name": "dispute",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  100,
+                  105,
+                  115,
+                  112,
+                  117,
+                  116,
+                  101
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "seller"
+              },
+              {
+                "kind": "arg",
+                "path": "index"
+              }
+            ]
+          }
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "index",
+          "type": "u32"
+        },
+        {
+          "name": "amount",
+          "type": "u64"
+        },
+        {
+          "name": "evidence_hash",
+          "type": {
+            "array": [
+              "u8",
+              32
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "register_seller",
+      "docs": [
+        "Claim a handle and open an empty record. Costs rent only."
+      ],
+      "discriminator": [
+        9,
+        50,
+        144,
+        162,
+        206,
+        176,
+        154,
+        111
+      ],
+      "accounts": [
+        {
+          "name": "owner",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "seller",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  115,
+                  101,
+                  108,
+                  108,
+                  101,
+                  114
+                ]
+              },
+              {
+                "kind": "arg",
+                "path": "handle"
+              }
+            ]
+          }
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "handle",
+          "type": "string"
+        },
+        {
+          "name": "arbiter",
+          "type": "pubkey"
+        }
+      ]
+    },
+    {
+      "name": "request_withdraw",
+      "docs": [
+        "Announce an exit and start the seven day notice period."
+      ],
+      "discriminator": [
+        137,
+        95,
+        187,
+        96,
+        250,
+        138,
+        31,
+        182
+      ],
+      "accounts": [
+        {
+          "name": "owner",
+          "signer": true,
+          "relations": [
+            "seller"
+          ]
+        },
+        {
+          "name": "seller",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  115,
+                  101,
+                  108,
+                  108,
+                  101,
+                  114
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "seller.handle",
+                "account": "Seller"
+              }
+            ]
+          }
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "resolve_dispute",
+      "docs": [
+        "Rule on a claim: either pay the buyer out of the bond, or dismiss it."
+      ],
+      "discriminator": [
+        231,
+        6,
+        202,
+        6,
+        96,
+        103,
+        12,
+        230
+      ],
+      "accounts": [
+        {
+          "name": "arbiter",
+          "signer": true,
+          "relations": [
+            "seller"
+          ]
+        },
+        {
+          "name": "seller",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  115,
+                  101,
+                  108,
+                  108,
+                  101,
+                  114
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "seller.handle",
+                "account": "Seller"
+              }
+            ]
+          }
+        },
+        {
+          "name": "dispute",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  100,
+                  105,
+                  115,
+                  112,
+                  117,
+                  116,
+                  101
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "seller"
+              },
+              {
+                "kind": "account",
+                "path": "dispute.index",
+                "account": "Dispute"
+              }
+            ]
+          }
+        },
+        {
+          "name": "buyer",
+          "writable": true
+        }
+      ],
+      "args": [
+        {
+          "name": "slash",
+          "type": "bool"
+        }
+      ]
+    },
+    {
+      "name": "withdraw_bond",
+      "docs": [
+        "Take the bond back once the notice period has run and nothing is pending."
+      ],
+      "discriminator": [
+        222,
+        199,
+        141,
+        31,
+        188,
+        93,
+        155,
+        40
+      ],
+      "accounts": [
+        {
+          "name": "owner",
+          "writable": true,
+          "signer": true,
+          "relations": [
+            "seller"
+          ]
+        },
+        {
+          "name": "seller",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  115,
+                  101,
+                  108,
+                  108,
+                  101,
+                  114
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "seller.handle",
+                "account": "Seller"
+              }
+            ]
+          }
+        }
+      ],
+      "args": [
+        {
+          "name": "amount",
+          "type": "u64"
+        }
+      ]
+    }
+  ],
+  "accounts": [
+    {
+      "name": "Dispute",
+      "discriminator": [
+        36,
+        49,
+        241,
+        67,
+        40,
+        36,
+        241,
+        74
+      ]
+    },
+    {
+      "name": "Seller",
+      "discriminator": [
+        76,
+        163,
+        162,
+        59,
+        115,
+        49,
+        116,
+        39
+      ]
+    }
+  ],
+  "errors": [
+    {
+      "code": 6000,
+      "name": "InvalidHandle",
+      "msg": "Handle must be 1-32 characters, lowercase letters, digits, dot, underscore or hyphen"
+    },
+    {
+      "code": 6001,
+      "name": "BondTooSmall",
+      "msg": "Deposit is below the minimum bond required for a badge"
+    },
+    {
+      "code": 6002,
+      "name": "ZeroAmount",
+      "msg": "Deposit amount must be greater than zero"
+    },
+    {
+      "code": 6003,
+      "name": "NotSellerOwner",
+      "msg": "Only the account that registered this seller may do that"
+    },
+    {
+      "code": 6004,
+      "name": "NotArbiter",
+      "msg": "Only the assigned arbiter may resolve a dispute"
+    },
+    {
+      "code": 6005,
+      "name": "DisputeIndexMismatch",
+      "msg": "Dispute index does not follow the seller's dispute counter"
+    },
+    {
+      "code": 6006,
+      "name": "ClaimExceedsBond",
+      "msg": "Claim exceeds the bond currently locked by this seller"
+    },
+    {
+      "code": 6007,
+      "name": "DisputeAlreadyResolved",
+      "msg": "This dispute has already been resolved"
+    },
+    {
+      "code": 6008,
+      "name": "OpenDisputesRemain",
+      "msg": "Seller has unresolved disputes; funds stay locked until they close"
+    },
+    {
+      "code": 6009,
+      "name": "TooManyOpenDisputes",
+      "msg": "Too many disputes are open against this seller"
+    },
+    {
+      "code": 6010,
+      "name": "WithdrawNotRequested",
+      "msg": "No withdrawal has been announced for this seller"
+    },
+    {
+      "code": 6011,
+      "name": "WithdrawStillLocked",
+      "msg": "The seven day withdrawal notice has not elapsed yet"
+    },
+    {
+      "code": 6012,
+      "name": "InsufficientBond",
+      "msg": "Requested amount is larger than the remaining bond"
+    },
+    {
+      "code": 6013,
+      "name": "SelfDispute",
+      "msg": "A seller cannot file a dispute against their own bond"
+    },
+    {
+      "code": 6014,
+      "name": "MathOverflow",
+      "msg": "Arithmetic overflow"
+    }
+  ],
+  "types": [
+    {
+      "name": "Dispute",
+      "docs": [
+        "A single claim filed by a buyer. Kept as its own account so the history is",
+        "permanent and countable by anyone, not just by us."
+      ],
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "seller",
+            "type": "pubkey"
+          },
+          {
+            "name": "buyer",
+            "type": "pubkey"
+          },
+          {
+            "name": "index",
+            "type": "u32"
+          },
+          {
+            "name": "amount",
+            "docs": [
+              "Lamports the buyer says they are owed."
+            ],
+            "type": "u64"
+          },
+          {
+            "name": "opened_at",
+            "type": "i64"
+          },
+          {
+            "name": "resolved_at",
+            "type": "i64"
+          },
+          {
+            "name": "status",
+            "docs": [
+              "0 open, 1 dismissed, 2 slashed."
+            ],
+            "type": "u8"
+          },
+          {
+            "name": "evidence_hash",
+            "docs": [
+              "SHA-256 of the evidence bundle stored off chain. Lets a buyer prove later",
+              "that the evidence was not swapped after the fact."
+            ],
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          },
+          {
+            "name": "bump",
+            "type": "u8"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Seller",
+      "docs": [
+        "One record per seller. The account itself holds the bonded lamports, so the",
+        "money and the reputation it backs can never drift apart."
+      ],
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "owner",
+            "docs": [
+              "Wallet allowed to top up or withdraw the bond."
+            ],
+            "type": "pubkey"
+          },
+          {
+            "name": "arbiter",
+            "docs": [
+              "Wallet allowed to rule on disputes."
+            ],
+            "type": "pubkey"
+          },
+          {
+            "name": "handle",
+            "docs": [
+              "Public handle, also the PDA seed and the slug in the profile URL."
+            ],
+            "type": "string"
+          },
+          {
+            "name": "bond",
+            "docs": [
+              "Lamports currently bonded and slashable."
+            ],
+            "type": "u64"
+          },
+          {
+            "name": "lifetime_deposited",
+            "docs": [
+              "Everything ever put in, ignoring what came back out. Deters a seller who",
+              "tops up right before a sale and pulls out right after."
+            ],
+            "type": "u64"
+          },
+          {
+            "name": "slashed_total",
+            "docs": [
+              "Everything ever paid out to wronged buyers."
+            ],
+            "type": "u64"
+          },
+          {
+            "name": "registered_at",
+            "docs": [
+              "When the seller first registered."
+            ],
+            "type": "i64"
+          },
+          {
+            "name": "bonded_since",
+            "docs": [
+              "When the bond last went from empty to funded. Resets on a full exit, so",
+              "age cannot be recycled."
+            ],
+            "type": "i64"
+          },
+          {
+            "name": "disputes_opened",
+            "type": "u32"
+          },
+          {
+            "name": "disputes_slashed",
+            "type": "u32"
+          },
+          {
+            "name": "disputes_dismissed",
+            "type": "u32"
+          },
+          {
+            "name": "open_disputes",
+            "type": "u32"
+          },
+          {
+            "name": "withdraw_unlock_at",
+            "docs": [
+              "Unix time the announced withdrawal unlocks. Zero means no exit pending."
+            ],
+            "type": "i64"
+          },
+          {
+            "name": "bump",
+            "type": "u8"
+          }
+        ]
+      }
+    }
+  ]
+}

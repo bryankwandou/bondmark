@@ -1,0 +1,154 @@
+@import "tailwindcss";
+
+/*
+  Tokens are defined once, in full, on :root. The dark block only swaps values, so a
+  colour can never exist in one theme and go missing in the other.
+*/
+:root {
+  --paper: #f6f4ef;
+  --paper-deep: #eeebe3;
+  --surface: #ffffff;
+  --ink: #12171e;
+  --ink-soft: #5a636e;
+  --ink-faint: #8a929c;
+  --rule: #e2ded4;
+  --rule-strong: #cec8ba;
+
+  --bond: #0e7c66;
+  --bond-soft: #e0f0eb;
+  --seal: #b08428;
+  --seal-soft: #f5ecd6;
+  --notice: #b4661a;
+  --notice-soft: #fbeeda;
+  --claim: #9e2b2b;
+  --claim-soft: #f8e5e3;
+
+  --shadow-card: 0 1px 2px rgb(18 23 30 / 0.05), 0 8px 24px -12px rgb(18 23 30 / 0.14);
+  --shadow-lift: 0 2px 4px rgb(18 23 30 / 0.06), 0 18px 40px -18px rgb(18 23 30 / 0.22);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --paper: #0b0e12;
+    --paper-deep: #080b0e;
+    --surface: #141920;
+    --ink: #edeae3;
+    --ink-soft: #9aa3ae;
+    --ink-faint: #6c7580;
+    --rule: #232a33;
+    --rule-strong: #323b46;
+
+    --bond: #2aa98d;
+    --bond-soft: #102b26;
+    --seal: #d6a93f;
+    --seal-soft: #2b2415;
+    --notice: #e08a32;
+    --notice-soft: #2e1f10;
+    --claim: #d65c5c;
+    --claim-soft: #2d1618;
+
+    --shadow-card: 0 1px 2px rgb(0 0 0 / 0.4), 0 8px 24px -12px rgb(0 0 0 / 0.6);
+    --shadow-lift: 0 2px 4px rgb(0 0 0 / 0.5), 0 18px 40px -18px rgb(0 0 0 / 0.7);
+  }
+}
+
+:root[data-theme="dark"] {
+  --paper: #0b0e12;
+  --paper-deep: #080b0e;
+  --surface: #141920;
+  --ink: #edeae3;
+  --ink-soft: #9aa3ae;
+  --ink-faint: #6c7580;
+  --rule: #232a33;
+  --rule-strong: #323b46;
+
+  --bond: #2aa98d;
+  --bond-soft: #102b26;
+  --seal: #d6a93f;
+  --seal-soft: #2b2415;
+  --notice: #e08a32;
+  --notice-soft: #2e1f10;
+  --claim: #d65c5c;
+  --claim-soft: #2d1618;
+
+  --shadow-card: 0 1px 2px rgb(0 0 0 / 0.4), 0 8px 24px -12px rgb(0 0 0 / 0.6);
+  --shadow-lift: 0 2px 4px rgb(0 0 0 / 0.5), 0 18px 40px -18px rgb(0 0 0 / 0.7);
+}
+
+@theme inline {
+  --color-paper: var(--paper);
+  --color-paper-deep: var(--paper-deep);
+  --color-surface: var(--surface);
+  --color-ink: var(--ink);
+  --color-ink-soft: var(--ink-soft);
+  --color-ink-faint: var(--ink-faint);
+  --color-rule: var(--rule);
+  --color-rule-strong: var(--rule-strong);
+  --color-bond: var(--bond);
+  --color-bond-soft: var(--bond-soft);
+  --color-seal: var(--seal);
+  --color-seal-soft: var(--seal-soft);
+  --color-notice: var(--notice);
+  --color-notice-soft: var(--notice-soft);
+  --color-claim: var(--claim);
+  --color-claim-soft: var(--claim-soft);
+
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+  --font-display: var(--font-instrument-serif);
+}
+
+* {
+  border-color: var(--rule);
+}
+
+body {
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--font-geist-sans), system-ui, sans-serif;
+  font-feature-settings: "cv11", "ss01";
+}
+
+/* Amounts must not jitter as they update. */
+.figure {
+  font-family: var(--font-geist-mono), ui-monospace, monospace;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.01em;
+}
+
+.display {
+  font-family: var(--font-instrument-serif), Georgia, serif;
+  font-weight: 400;
+  letter-spacing: -0.015em;
+  line-height: 1.02;
+}
+
+/* The faint ledger ruling that runs behind hero and section grounds. */
+.ledger-ground {
+  background-image:
+    linear-gradient(to right, color-mix(in oklab, var(--rule) 55%, transparent) 1px, transparent 1px),
+    linear-gradient(to bottom, color-mix(in oklab, var(--rule) 55%, transparent) 1px, transparent 1px);
+  background-size: 64px 64px;
+  mask-image: radial-gradient(ellipse 80% 60% at 50% 30%, #000 30%, transparent 78%);
+}
+
+::selection {
+  background: color-mix(in oklab, var(--seal) 28%, transparent);
+  color: var(--ink);
+}
+
+:focus-visible {
+  outline: 2px solid var(--bond);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
