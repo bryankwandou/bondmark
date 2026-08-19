@@ -133,6 +133,23 @@ Deliverable: live URL, repo URL, subscription receipts.
 
 ---
 
+---
+
+## Tautan final (sudah live)
+
+- Aplikasi: https://bondmark.vercel.app
+- Submission / response files: https://bondmark-submission.vercel.app
+- Repo publik: https://github.com/bryankwandou/bondmark
+- Program devnet: https://explorer.solana.com/address/5qbPy6p44mp8r73vNwmzMmzzSwGMm9veiwrSDgnyPctG?cluster=devnet
+
+Kolom **Personal Github Profile** di form harus diisi `bryankwandou`, bukan
+`nayrbryanGaming` — repo ini ada di akun itu.
+
+Kolom **link** di bagian bawah Step 2 diisi:
+`https://bondmark-submission.vercel.app`
+
+---
+
 ## Catatan sebelum kirim
 
 - Repo akan public, jadi syarat berbagi akses ke `abhwshek@gmail.com` tidak berlaku.
