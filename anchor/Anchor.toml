@@ -1,0 +1,21 @@
+[toolchain]
+package_manager = "npm"
+
+[features]
+resolution = true
+skip-lint = false
+
+[programs.devnet]
+bondmark = "5qbPy6p44mp8r73vNwmzMmzzSwGMm9veiwrSDgnyPctG"
+
+[programs.localnet]
+bondmark = "5qbPy6p44mp8r73vNwmzMmzzSwGMm9veiwrSDgnyPctG"
+
+[provider]
+cluster = "devnet"
+wallet = "C:/Users/arche/.config/solana/stele-funder.json"
+
+[scripts]
+test = "cargo test"
+
+[hooks]
