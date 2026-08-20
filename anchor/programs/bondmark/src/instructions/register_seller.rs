@@ -1,4 +1,5 @@
 use anchor_lang::prelude::*;
+use anchor_spl::token::{Mint, Token, TokenAccount};
 
 use crate::constants::*;
 use crate::error::BondmarkError;
@@ -19,6 +20,23 @@ pub struct RegisterSeller<'info> {
     )]
     pub seller: Account<'info, Seller>,
 
+    /// The stablecoin the bond is denominated in. Fixed at registration so a
+    /// seller cannot swap the guarantee into something softer later.
+    pub bond_mint: Account<'info, Mint>,
+
+    /// Holds the money. Its authority is the seller record itself, so releasing
+    /// funds always goes through the rules in this program.
+    #[account(
+        init,
+        payer = owner,
+        seeds = [VAULT_SEED, seller.key().as_ref()],
+        bump,
+        token::mint = bond_mint,
+        token::authority = seller
+    )]
+    pub vault: Account<'info, TokenAccount>,
+
+    pub token_program: Program<'info, Token>,
     pub system_program: Program<'info, System>,
 }
 
@@ -37,10 +55,12 @@ pub fn handler(ctx: Context<RegisterSeller>, handle: String, arbiter: Pubkey) ->
     require!(handle_is_clean(&handle), BondmarkError::InvalidHandle);
 
     let now = Clock::get()?.unix_timestamp;
+    let bond_mint = ctx.accounts.bond_mint.key();
     let seller = &mut ctx.accounts.seller;
 
     seller.owner = ctx.accounts.owner.key();
     seller.arbiter = arbiter;
+    seller.bond_mint = bond_mint;
     seller.handle = handle;
     seller.bond = 0;
     seller.lifetime_deposited = 0;

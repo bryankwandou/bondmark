@@ -1,5 +1,5 @@
 import { SiteFooter, SiteNav } from "@/components/site-chrome";
-import { BOND_CEILING_SOL, MIN_BOND_SOL } from "@/lib/score";
+import { BOND_CEILING_USD, MIN_BOND_USD } from "@/lib/score";
 
 export const metadata = {
   title: "How the score works",
@@ -11,8 +11,8 @@ const CREDITS = [
   {
     label: "Collateral depth",
     max: 40,
-    formula: `40 × log₁₀(1 + bond / ${MIN_BOND_SOL}) ÷ log₁₀(1 + ${BOND_CEILING_SOL} / ${MIN_BOND_SOL})`,
-    why: "Going from nothing to half a SOL changes a buyer's exposure far more than going from 50 to 50.5, so the curve is logarithmic. It saturates at 100 SOL, which stops a large wallet from simply buying a perfect score.",
+    formula: `40 × log₁₀(1 + bond / ${MIN_BOND_USD}) ÷ log₁₀(1 + ${BOND_CEILING_USD} / ${MIN_BOND_USD})`,
+    why: "Going from nothing to $50 changes a buyer's exposure far more than going from $2,000 to $2,050, so the curve is logarithmic. It saturates at $5,000, which stops a large wallet from simply buying a perfect score.",
   },
   {
     label: "Time bonded",

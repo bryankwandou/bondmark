@@ -1,4 +1,5 @@
 use anchor_lang::prelude::*;
+use anchor_spl::token::{self, Token, TokenAccount, Transfer};
 
 use crate::constants::*;
 use crate::error::BondmarkError;
@@ -16,6 +17,22 @@ pub struct WithdrawBond<'info> {
         has_one = owner @ BondmarkError::NotSellerOwner
     )]
     pub seller: Account<'info, Seller>,
+
+    #[account(
+        mut,
+        seeds = [VAULT_SEED, seller.key().as_ref()],
+        bump
+    )]
+    pub vault: Account<'info, TokenAccount>,
+
+    #[account(
+        mut,
+        constraint = owner_token.mint == seller.bond_mint @ BondmarkError::WrongBondMint,
+        constraint = owner_token.owner == owner.key() @ BondmarkError::NotSellerOwner
+    )]
+    pub owner_token: Account<'info, TokenAccount>,
+
+    pub token_program: Program<'info, Token>,
 }
 
 pub fn handler(ctx: Context<WithdrawBond>, amount: u64) -> Result<()> {
@@ -30,9 +47,22 @@ pub fn handler(ctx: Context<WithdrawBond>, amount: u64) -> Result<()> {
         require!(amount <= seller.bond, BondmarkError::InsufficientBond);
     }
 
-    let seller_ai = ctx.accounts.seller.to_account_info();
-    **seller_ai.try_borrow_mut_lamports()? -= amount;
-    **ctx.accounts.owner.to_account_info().try_borrow_mut_lamports()? += amount;
+    let handle = ctx.accounts.seller.handle.clone();
+    let bump = ctx.accounts.seller.bump;
+    let signer_seeds: &[&[&[u8]]] = &[&[SELLER_SEED, handle.as_bytes(), &[bump]]];
+
+    token::transfer(
+        CpiContext::new_with_signer(
+            ctx.accounts.token_program.key(),
+            Transfer {
+                from: ctx.accounts.vault.to_account_info(),
+                to: ctx.accounts.owner_token.to_account_info(),
+                authority: ctx.accounts.seller.to_account_info(),
+            },
+            signer_seeds,
+        ),
+        amount,
+    )?;
 
     let seller = &mut ctx.accounts.seller;
     seller.bond = seller.bond.saturating_sub(amount);
@@ -42,6 +72,6 @@ pub fn handler(ctx: Context<WithdrawBond>, amount: u64) -> Result<()> {
         seller.withdraw_unlock_at = 0;
     }
 
-    msg!("withdrew {} lamports, {} remaining", amount, seller.bond);
+    msg!("withdrew {} base units, {} remaining", amount, seller.bond);
     Ok(())
 }

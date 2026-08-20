@@ -30,6 +30,10 @@ pub enum BondmarkError {
     InsufficientBond,
     #[msg("A seller cannot file a dispute against their own bond")]
     SelfDispute,
+    #[msg("Token account is not denominated in this seller's bond mint")]
+    WrongBondMint,
+    #[msg("Payout account does not belong to the buyer who filed the claim")]
+    WrongBuyerAccount,
     #[msg("Arithmetic overflow")]
     MathOverflow,
 }

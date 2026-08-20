@@ -10,13 +10,19 @@
  * the explanation and the arithmetic can never drift apart.
  */
 
-export const LAMPORTS_PER_SOL = 1_000_000_000;
+/**
+ * Bonds are denominated in a stablecoin with six decimals. A refund a buyer is
+ * owed in rupiah is not covered by a deposit that can lose a third of its value
+ * between the order and the complaint, so the collateral is held in the same
+ * kind of money the refund is measured in.
+ */
+export const UNITS_PER_USD = 1_000_000;
 
-/** Mirrors MIN_BOND_LAMPORTS in the on-chain program. */
-export const MIN_BOND_SOL = 0.1;
+/** Mirrors MIN_BOND_UNITS in the on-chain program. */
+export const MIN_BOND_USD = 25;
 
 /** Deposit size at which collateral depth stops earning further points. */
-export const BOND_CEILING_SOL = 100;
+export const BOND_CEILING_USD = 5_000;
 
 export type SellerRecord = {
   bond: bigint;
@@ -79,26 +85,26 @@ const DAY = 86_400;
 const clamp = (n: number, lo: number, hi: number) => Math.min(hi, Math.max(lo, n));
 const round1 = (n: number) => Math.round(n * 10) / 10;
 
-export const lamportsToSol = (n: bigint) => Number(n) / LAMPORTS_PER_SOL;
+export const unitsToUsd = (n: bigint) => Number(n) / UNITS_PER_USD;
 
 /**
  * How much money is actually at stake, on a log curve.
  *
- * Linear would misread the risk: going from nothing to half a SOL changes a
- * buyer's exposure far more than going from 50 to 50.5. The curve saturates at
- * BOND_CEILING_SOL so a large wallet cannot simply buy a perfect score.
+ * Linear would misread the risk: going from nothing to $50 changes a buyer's
+ * exposure far more than going from $2,000 to $2,050. The curve saturates at
+ * BOND_CEILING_USD so a large wallet cannot simply buy a perfect score.
  */
-function collateralDepth(bondSol: number): ScoreLine {
+function collateralDepth(bondUsd: number): ScoreLine {
   const max = 40;
   const ratio =
-    bondSol <= 0
+    bondUsd <= 0
       ? 0
-      : Math.log10(1 + bondSol / MIN_BOND_SOL) /
-        Math.log10(1 + BOND_CEILING_SOL / MIN_BOND_SOL);
+      : Math.log10(1 + bondUsd / MIN_BOND_USD) /
+        Math.log10(1 + BOND_CEILING_USD / MIN_BOND_USD);
   return {
     key: "collateral",
     label: "Collateral depth",
-    detail: `${round1(bondSol)} SOL locked, on a log curve that flattens at ${BOND_CEILING_SOL} SOL`,
+    detail: `$${round1(bondUsd)} locked, on a log curve that flattens at $${BOND_CEILING_USD}`,
     points: round1(max * clamp(ratio, 0, 1)),
     max,
   };
@@ -155,16 +161,16 @@ function claimRecord(dismissed: number, slashed: number): ScoreLine {
  * pattern where a seller funds a large bond, collects the badge and the orders,
  * then quietly walks most of it back out.
  */
-function retention(bondSol: number, lifetimeSol: number): ScoreLine {
+function retention(bondUsd: number, lifetimeUsd: number): ScoreLine {
   const max = 10;
-  const ratio = lifetimeSol <= 0 ? 0 : clamp(bondSol / lifetimeSol, 0, 1);
+  const ratio = lifetimeUsd <= 0 ? 0 : clamp(bondUsd / lifetimeUsd, 0, 1);
   return {
     key: "retention",
     label: "Deposit kept in place",
     detail:
-      lifetimeSol <= 0
+      lifetimeUsd <= 0
         ? "Nothing has been deposited yet"
-        : `${Math.round(ratio * 100)}% of the ${round1(lifetimeSol)} SOL ever deposited is still locked`,
+        : `${Math.round(ratio * 100)}% of the $${round1(lifetimeUsd)} ever deposited is still locked`,
     points: round1(max * ratio),
     max,
   };
@@ -199,13 +205,13 @@ function exitNotice(withdrawUnlockAt: number, now: number): ScoreLine | null {
 }
 
 /** Money that actually left the deposit and reached a buyer. */
-function slashHistory(slashedSol: number, lifetimeSol: number): ScoreLine | null {
-  if (slashedSol <= 0) return null;
-  const ratio = lifetimeSol <= 0 ? 1 : clamp(slashedSol / lifetimeSol, 0, 1);
+function slashHistory(slashedUsd: number, lifetimeUsd: number): ScoreLine | null {
+  if (slashedUsd <= 0) return null;
+  const ratio = lifetimeUsd <= 0 ? 1 : clamp(slashedUsd / lifetimeUsd, 0, 1);
   return {
     key: "slashed",
     label: "Paid out to buyers",
-    detail: `${round1(slashedSol)} SOL has been taken from this deposit and handed to buyers`,
+    detail: `$${round1(slashedUsd)} has been taken from this deposit and handed to buyers`,
     points: -round1(20 * ratio),
     max: -20,
   };
@@ -221,21 +227,21 @@ function bandFor(total: number, bond: bigint): Band {
 
 export function scoreSeller(s: SellerRecord, nowSeconds?: number): ScoreResult {
   const now = nowSeconds ?? Math.floor(Date.now() / 1000);
-  const bondSol = lamportsToSol(s.bond);
-  const lifetimeSol = lamportsToSol(s.lifetimeDeposited);
-  const slashedSol = lamportsToSol(s.slashedTotal);
+  const bondUsd = unitsToUsd(s.bond);
+  const lifetimeUsd = unitsToUsd(s.lifetimeDeposited);
+  const slashedUsd = unitsToUsd(s.slashedTotal);
 
   const credits: ScoreLine[] = [
-    collateralDepth(bondSol),
+    collateralDepth(bondUsd),
     tenure(s.bondedSince, now),
     claimRecord(s.disputesDismissed, s.disputesSlashed),
-    retention(bondSol, lifetimeSol),
+    retention(bondUsd, lifetimeUsd),
   ];
 
   const penalties = [
     openClaims(s.openDisputes),
     exitNotice(s.withdrawUnlockAt, now),
-    slashHistory(slashedSol, lifetimeSol),
+    slashHistory(slashedUsd, lifetimeUsd),
   ].filter((x): x is ScoreLine => x !== null);
 
   const raw =

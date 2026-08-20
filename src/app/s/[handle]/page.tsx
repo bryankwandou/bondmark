@@ -1,12 +1,14 @@
+import { PublicKey } from "@solana/web3.js";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
 import { ScoreDial } from "@/components/score-dial";
 import { SiteFooter, SiteNav } from "@/components/site-chrome";
-import { formatDate, formatSol, shortKey, timeAgo, timeLeft } from "@/lib/format";
+import { formatDate, formatUsd, shortKey, timeAgo, timeLeft } from "@/lib/format";
 import { BAND_COPY, scoreSeller } from "@/lib/score";
 import {
   explorerAccount,
+  vaultPda,
   fetchDisputes,
   fetchSeller,
   type DisputeAccount,
@@ -66,7 +68,7 @@ export default async function SellerProfile({ params }: Params) {
             <dl className="mt-10 grid gap-px overflow-hidden rounded-xl border border-rule bg-rule sm:grid-cols-4">
               <Cell
                 label="Locked now"
-                value={`${formatSol(seller.bond)} SOL`}
+                value={formatUsd(seller.bond)}
                 tone={seller.bond > 0n ? "bond" : "faint"}
               />
               <Cell
@@ -78,7 +80,7 @@ export default async function SellerProfile({ params }: Params) {
               <Cell label="Claims filed" value={String(seller.disputesOpened)} />
               <Cell
                 label="Paid out"
-                value={`${formatSol(seller.slashedTotal)} SOL`}
+                value={formatUsd(seller.slashedTotal)}
                 tone={seller.slashedTotal > 0n ? "claim" : undefined}
               />
             </dl>
@@ -159,7 +161,12 @@ export default async function SellerProfile({ params }: Params) {
             <h2 className="display text-2xl">Verify without us</h2>
             <div className="mt-6 grid gap-px overflow-hidden rounded-xl border border-rule bg-rule sm:grid-cols-2">
               <ChainLink label="Seller account" address={seller.address} />
+              <ChainLink
+                label="Vault holding the money"
+                address={vaultPda(new PublicKey(seller.address)).toBase58()}
+              />
               <ChainLink label="Controlled by" address={seller.owner} />
+              <ChainLink label="Bonded in" address={seller.bondMint} />
               <ChainLink label="Arbiter" address={seller.arbiter} />
               <div className="bg-surface px-4 py-3.5">
                 <div className="text-xs text-ink-faint">Registered</div>
@@ -233,7 +240,7 @@ function ClaimRow({ dispute }: { dispute: DisputeAccount }) {
         <span className={`rounded-md px-2 py-1 text-xs font-medium ${label.cls}`}>
           {label.text}
         </span>
-        <span className="figure text-sm">{formatSol(dispute.amount)} SOL claimed</span>
+        <span className="figure text-sm">{formatUsd(dispute.amount)} claimed</span>
       </div>
       <div className="mt-3 flex flex-wrap gap-x-6 gap-y-1 text-xs text-ink-faint">
         <span>Filed {timeAgo(dispute.openedAt)}</span>

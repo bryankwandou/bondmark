@@ -1,5 +1,5 @@
 use anchor_lang::prelude::*;
-use anchor_lang::system_program::{transfer, Transfer};
+use anchor_spl::token::{self, Token, TokenAccount, Transfer};
 
 use crate::constants::*;
 use crate::error::BondmarkError;
@@ -18,7 +18,21 @@ pub struct DepositBond<'info> {
     )]
     pub seller: Account<'info, Seller>,
 
-    pub system_program: Program<'info, System>,
+    #[account(
+        mut,
+        constraint = owner_token.mint == seller.bond_mint @ BondmarkError::WrongBondMint,
+        constraint = owner_token.owner == owner.key() @ BondmarkError::NotSellerOwner
+    )]
+    pub owner_token: Account<'info, TokenAccount>,
+
+    #[account(
+        mut,
+        seeds = [VAULT_SEED, seller.key().as_ref()],
+        bump
+    )]
+    pub vault: Account<'info, TokenAccount>,
+
+    pub token_program: Program<'info, Token>,
 }
 
 pub fn handler(ctx: Context<DepositBond>, amount: u64) -> Result<()> {
@@ -30,17 +44,16 @@ pub fn handler(ctx: Context<DepositBond>, amount: u64) -> Result<()> {
     // A first deposit has to clear the floor, otherwise the badge would promise
     // more than the money behind it.
     if starting_from_empty {
-        require!(amount >= MIN_BOND_LAMPORTS, BondmarkError::BondTooSmall);
+        require!(amount >= MIN_BOND_UNITS, BondmarkError::BondTooSmall);
     }
 
-    // The seller PDA holds the lamports directly, so a slash later is a plain
-    // balance move rather than a second account to keep in sync.
-    transfer(
+    token::transfer(
         CpiContext::new(
-            ctx.accounts.system_program.key(),
+            ctx.accounts.token_program.key(),
             Transfer {
-                from: ctx.accounts.owner.to_account_info(),
-                to: ctx.accounts.seller.to_account_info(),
+                from: ctx.accounts.owner_token.to_account_info(),
+                to: ctx.accounts.vault.to_account_info(),
+                authority: ctx.accounts.owner.to_account_info(),
             },
         ),
         amount,
@@ -61,6 +74,6 @@ pub fn handler(ctx: Context<DepositBond>, amount: u64) -> Result<()> {
     // countdown running quietly while still showing a funded badge.
     seller.withdraw_unlock_at = 0;
 
-    msg!("bond now {} lamports", seller.bond);
+    msg!("bond now {} base units", seller.bond);
     Ok(())
 }

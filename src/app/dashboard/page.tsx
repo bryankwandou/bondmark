@@ -18,7 +18,7 @@ const STEPS = [
   {
     n: "02",
     title: "Decide what you are willing to put up",
-    body: "The minimum is 0.1 SOL, but the minimum is also a statement. Buyers see the figure before they see anything else you have written, and a small deposit against large orders answers its own question.",
+    body: "The minimum is 25 USDC, but the minimum is also a statement. Buyers see the figure before they see anything else you have written, and a small deposit against large orders answers its own question.",
     call: "deposit_bond(amount)",
   },
   {

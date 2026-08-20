@@ -2,8 +2,9 @@ use anchor_lang::prelude::*;
 
 use crate::constants::MAX_HANDLE_LEN;
 
-/// One record per seller. The account itself holds the bonded lamports, so the
-/// money and the reputation it backs can never drift apart.
+/// One record per seller. The money itself sits in a vault token account derived
+/// from this record, so the balance and the reputation it backs cannot drift
+/// apart and neither can be moved without the other being visible.
 #[account]
 #[derive(InitSpace)]
 pub struct Seller {
@@ -11,10 +12,14 @@ pub struct Seller {
     pub owner: Pubkey,
     /// Wallet allowed to rule on disputes.
     pub arbiter: Pubkey,
+    /// Mint the bond is denominated in. A refund owed in rupiah is not covered
+    /// by a deposit that can lose a third of its value overnight, so this is a
+    /// stablecoin mint in every deployment we run.
+    pub bond_mint: Pubkey,
     /// Public handle, also the PDA seed and the slug in the profile URL.
     #[max_len(MAX_HANDLE_LEN)]
     pub handle: String,
-    /// Lamports currently bonded and slashable.
+    /// Base units of `bond_mint` currently bonded and slashable.
     pub bond: u64,
     /// Everything ever put in, ignoring what came back out. Deters a seller who
     /// tops up right before a sale and pulls out right after.
@@ -43,7 +48,7 @@ pub struct Dispute {
     pub seller: Pubkey,
     pub buyer: Pubkey,
     pub index: u32,
-    /// Lamports the buyer says they are owed.
+    /// Base units of the seller's bond mint the buyer says they are owed.
     pub amount: u64,
     pub opened_at: i64,
     pub resolved_at: i64,
