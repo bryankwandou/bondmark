@@ -104,7 +104,7 @@ function collateralDepth(bondUsd: number): ScoreLine {
   return {
     key: "collateral",
     label: "Collateral depth",
-    detail: `$${round1(bondUsd)} locked, on a log curve that flattens at $${BOND_CEILING_USD}`,
+    detail: `$${round1(bondUsd)} locked, on a log curve that flattens at $${BOND_CEILING_USD.toLocaleString("en-US")}`,
     points: round1(max * clamp(ratio, 0, 1)),
     max,
   };
