@@ -3,14 +3,14 @@ import { fetchSeller } from "../src/lib/solana/bondmark";
 import { scoreSeller } from "../src/lib/score";
 
 async function main() {
-  const s = await fetchSeller("warungmirna");
+  const s = await fetchSeller("warung.mirna");
   if (!s) {
     console.log("no seller found");
     return;
   }
   console.log("handle          ", s.handle);
   console.log("owner           ", s.owner);
-  console.log("bond (lamports) ", s.bond.toString());
+  console.log("bond (base units)", s.bond.toString());
   console.log("lifetime        ", s.lifetimeDeposited.toString());
   console.log("slashed         ", s.slashedTotal.toString());
   console.log("registeredAt    ", new Date(s.registeredAt * 1000).toISOString());

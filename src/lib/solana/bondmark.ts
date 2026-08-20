@@ -20,6 +20,16 @@ export const RPC_URL =
 
 const SELLER_SEED = Buffer.from("seller");
 const DISPUTE_SEED = Buffer.from("dispute");
+const VAULT_SEED = Buffer.from("vault");
+
+/**
+ * The stablecoin every bond is denominated in on this deployment. Devnet has no
+ * mintable Circle USDC, so this is our own six-decimal test mint; mainnet swaps
+ * the address and nothing else.
+ */
+export const BOND_MINT = new PublicKey(
+  process.env.NEXT_PUBLIC_BOND_MINT ?? "3q7LeeY51YvVHRC5MFJVSPpPx8pJ8ZFq31vbjzriRMrk",
+);
 
 let connection: Connection | null = null;
 
@@ -50,6 +60,7 @@ export type SellerAccount = {
   address: string;
   owner: string;
   arbiter: string;
+  bondMint: string;
   handle: string;
   bond: bigint;
   lifetimeDeposited: bigint;
@@ -62,6 +73,14 @@ export type SellerAccount = {
   openDisputes: number;
   withdrawUnlockAt: number;
 };
+
+/** Token account holding a seller's bond. Derived, so it needs no lookup table. */
+export function vaultPda(seller: PublicKey): PublicKey {
+  return PublicKey.findProgramAddressSync(
+    [VAULT_SEED, seller.toBuffer()],
+    PROGRAM_ID,
+  )[0];
+}
 
 export type DisputeStatus = "open" | "dismissed" | "slashed";
 
@@ -134,6 +153,7 @@ export function decodeSeller(address: PublicKey, data: Buffer): SellerAccount {
     address: address.toBase58(),
     owner: r.pubkey(),
     arbiter: r.pubkey(),
+    bondMint: r.pubkey(),
     handle: r.string(),
     bond: r.u64(),
     lifetimeDeposited: r.u64(),

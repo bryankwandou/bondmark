@@ -40,7 +40,7 @@ produces the same number, and anyone can fetch the accounts and recompute it.
 
 | Component | Weight | How it is measured |
 | --- | --- | --- |
-| Collateral depth | 40 | Deposit size on a log curve, flattening at 100 SOL |
+| Collateral depth | 40 | Deposit size on a log curve, flattening at $5,000 |
 | Time bonded | 25 | Square root of uninterrupted days, saturating at one year |
 | Claim outcomes | 25 | Dismissed vs paid out, Laplace smoothed so neither zero claims nor one claim looks conclusive |
 | Deposit kept in place | 10 | Share of everything ever deposited that is still locked |
@@ -57,7 +57,8 @@ Implementation: [`src/lib/score.ts`](src/lib/score.ts).
 
 One `Seller` PDA per handle, seeded on the handle itself, which makes handles unique by
 construction and makes the profile URL derivable without a lookup table. The account
-holds the bonded lamports directly, so a payout is a balance move rather than a second
+owns a vault token account derived from it, so the money and the record it backs are
+found by the same derivation and a payout goes through the program rather than a second
 account to keep in sync.
 
 One `Dispute` PDA per claim, seeded on the seller and a sequential index. Because indexes
@@ -67,7 +68,7 @@ without an indexer.
 | Instruction | Signer | Effect |
 | --- | --- | --- |
 | `register_seller` | seller | Claims a handle, opens an empty record |
-| `deposit_bond` | seller | Moves lamports in, cancels any pending exit |
+| `deposit_bond` | seller | Moves stablecoin into the vault, cancels any pending exit |
 | `open_dispute` | buyer | Files a claim with an evidence hash |
 | `resolve_dispute` | arbiter | Pays the buyer from the deposit, or dismisses |
 | `request_withdraw` | seller | Starts the seven day notice, blocked by open claims |
@@ -78,7 +79,7 @@ Source: [`anchor/programs/bondmark/src`](anchor/programs/bondmark/src).
 ## What this does not cover
 
 - It does not make a seller honest. It puts a price on dishonesty and shows you the price.
-- Cover is capped at the deposit. A 4 SOL bond returns at most 4 SOL in total, however
+- Cover is capped at the deposit. A $250 bond returns at most $250 in total, however
   large the order or however many buyers file.
 - Rulings are made by a human arbiter. That is the part you still have to trust; the
   deposit, the notice period and the history are not.

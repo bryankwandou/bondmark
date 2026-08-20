@@ -13,7 +13,7 @@ const SECTIONS = [
   },
   {
     title: "Cover stops at the amount locked",
-    body: "If a seller has 4 SOL bonded, 4 SOL is the most that can ever be returned through claims — not per buyer, but in total. Several buyers filing against the same deposit are drawing from one pot. Judge the deposit against the size of your order, not against the seller's follower count.",
+    body: "If a seller has $250 bonded, $250 is the most that can ever be returned through claims — not per buyer, but in total. Several buyers filing against the same deposit are drawing from one pot. Judge the deposit against the size of your order, not against the seller's follower count.",
   },
   {
     title: "It is not a verdict on quality",

@@ -61,8 +61,34 @@
           }
         },
         {
-          "name": "system_program",
-          "address": "11111111111111111111111111111111"
+          "name": "owner_token",
+          "writable": true
+        },
+        {
+          "name": "vault",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  118,
+                  97,
+                  117,
+                  108,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "seller"
+              }
+            ]
+          }
+        },
+        {
+          "name": "token_program",
+          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
         }
       ],
       "args": [
@@ -216,6 +242,43 @@
           }
         },
         {
+          "name": "bond_mint",
+          "docs": [
+            "The stablecoin the bond is denominated in. Fixed at registration so a",
+            "seller cannot swap the guarantee into something softer later."
+          ]
+        },
+        {
+          "name": "vault",
+          "docs": [
+            "Holds the money. Its authority is the seller record itself, so releasing",
+            "funds always goes through the rules in this program."
+          ],
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  118,
+                  97,
+                  117,
+                  108,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "seller"
+              }
+            ]
+          }
+        },
+        {
+          "name": "token_program",
+          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+        },
+        {
           "name": "system_program",
           "address": "11111111111111111111111111111111"
         }
@@ -358,8 +421,38 @@
           }
         },
         {
-          "name": "buyer",
+          "name": "vault",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  118,
+                  97,
+                  117,
+                  108,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "seller"
+              }
+            ]
+          }
+        },
+        {
+          "name": "buyer_token",
+          "docs": [
+            "Where a upheld claim gets paid. Checked against the buyer recorded on the",
+            "dispute, so an arbiter cannot redirect the payout to themselves."
+          ],
           "writable": true
+        },
+        {
+          "name": "token_program",
+          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
         }
       ],
       "args": [
@@ -416,6 +509,36 @@
               }
             ]
           }
+        },
+        {
+          "name": "vault",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  118,
+                  97,
+                  117,
+                  108,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "seller"
+              }
+            ]
+          }
+        },
+        {
+          "name": "owner_token",
+          "writable": true
+        },
+        {
+          "name": "token_program",
+          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
         }
       ],
       "args": [
@@ -527,6 +650,16 @@
     },
     {
       "code": 6014,
+      "name": "WrongBondMint",
+      "msg": "Token account is not denominated in this seller's bond mint"
+    },
+    {
+      "code": 6015,
+      "name": "WrongBuyerAccount",
+      "msg": "Payout account does not belong to the buyer who filed the claim"
+    },
+    {
+      "code": 6016,
       "name": "MathOverflow",
       "msg": "Arithmetic overflow"
     }
@@ -556,7 +689,7 @@
           {
             "name": "amount",
             "docs": [
-              "Lamports the buyer says they are owed."
+              "Base units of the seller's bond mint the buyer says they are owed."
             ],
             "type": "u64"
           },
@@ -598,8 +731,9 @@
     {
       "name": "Seller",
       "docs": [
-        "One record per seller. The account itself holds the bonded lamports, so the",
-        "money and the reputation it backs can never drift apart."
+        "One record per seller. The money itself sits in a vault token account derived",
+        "from this record, so the balance and the reputation it backs cannot drift",
+        "apart and neither can be moved without the other being visible."
       ],
       "type": {
         "kind": "struct",
@@ -619,6 +753,15 @@
             "type": "pubkey"
           },
           {
+            "name": "bond_mint",
+            "docs": [
+              "Mint the bond is denominated in. A refund owed in rupiah is not covered",
+              "by a deposit that can lose a third of its value overnight, so this is a",
+              "stablecoin mint in every deployment we run."
+            ],
+            "type": "pubkey"
+          },
+          {
             "name": "handle",
             "docs": [
               "Public handle, also the PDA seed and the slug in the profile URL."
@@ -628,7 +771,7 @@
           {
             "name": "bond",
             "docs": [
-              "Lamports currently bonded and slashable."
+              "Base units of `bond_mint` currently bonded and slashable."
             ],
             "type": "u64"
           },

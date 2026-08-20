@@ -9,12 +9,21 @@
 import { readFileSync } from "node:fs";
 
 import * as anchor from "@coral-xyz/anchor";
-import { Keypair, LAMPORTS_PER_SOL, PublicKey } from "@solana/web3.js";
+import {
+  TOKEN_PROGRAM_ID,
+  getAssociatedTokenAddressSync,
+} from "@solana/spl-token";
+import { Keypair, PublicKey } from "@solana/web3.js";
 
 import idl from "../src/lib/solana/idl.json";
 
 const RPC = "https://api.devnet.solana.com";
-const HANDLE = "warungmirna";
+const HANDLE = "warung.mirna";
+
+/** Six-decimal test stablecoin standing in for USDC, which devnet cannot mint. */
+const BOND_MINT = new PublicKey("3q7LeeY51YvVHRC5MFJVSPpPx8pJ8ZFq31vbjzriRMrk");
+const UNITS_PER_USD = 1_000_000;
+const DEPOSIT_USD = 250;
 
 function loadKeypair(path: string): Keypair {
   const raw = JSON.parse(readFileSync(path, "utf8")) as number[];
@@ -42,33 +51,49 @@ async function main() {
     [Buffer.from("seller"), Buffer.from(HANDLE)],
     programId,
   );
+  const [vaultPda] = PublicKey.findProgramAddressSync(
+    [Buffer.from("vault"), sellerPda.toBuffer()],
+    programId,
+  );
+  const ownerToken = getAssociatedTokenAddressSync(BOND_MINT, payer.publicKey);
 
   console.log("program", programId.toBase58());
   console.log("payer  ", payer.publicKey.toBase58());
   console.log("seller ", sellerPda.toBase58());
+  console.log("vault  ", vaultPda.toBase58());
 
   const existing = await connection.getAccountInfo(sellerPda);
 
   if (!existing) {
     const sig = await program.methods
       .registerSeller(HANDLE, payer.publicKey)
-      .accounts({ owner: payer.publicKey })
+      .accounts({
+        owner: payer.publicKey,
+        bondMint: BOND_MINT,
+        tokenProgram: TOKEN_PROGRAM_ID,
+      })
       .rpc();
     console.log("registered:", sig);
   } else {
     console.log("seller already registered, skipping");
   }
 
-  // 4.2 SOL is deliberately a figure a real small seller could reach, not a
-  // number chosen to make the demo score well.
+  // $250 is deliberately a figure a real small seller could reach, not a number
+  // chosen to make the demo score well.
   const depositSig = await program.methods
-    .depositBond(new anchor.BN(4.2 * LAMPORTS_PER_SOL))
-    .accounts({ owner: payer.publicKey, seller: sellerPda })
+    .depositBond(new anchor.BN(DEPOSIT_USD * UNITS_PER_USD))
+    .accounts({
+      owner: payer.publicKey,
+      seller: sellerPda,
+      ownerToken,
+      vault: vaultPda,
+      tokenProgram: TOKEN_PROGRAM_ID,
+    })
     .rpc();
   console.log("deposited:", depositSig);
 
   const account = await program.account.seller.fetch(sellerPda);
-  console.log("bond now:", Number(account.bond) / LAMPORTS_PER_SOL, "SOL");
+  console.log("bond now: $", Number(account.bond) / UNITS_PER_USD);
   console.log(
     `profile: https://explorer.solana.com/address/${sellerPda.toBase58()}?cluster=devnet`,
   );

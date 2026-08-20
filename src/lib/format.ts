@@ -6,20 +6,23 @@
  * decimals to be honest, never so many that the eye has to count digits.
  */
 
-import { LAMPORTS_PER_SOL } from "./score";
+import { UNITS_PER_USD } from "./score";
 
-export function solFromLamports(lamports: bigint): number {
-  return Number(lamports) / LAMPORTS_PER_SOL;
+export function usdFromUnits(units: bigint): number {
+  return Number(units) / UNITS_PER_USD;
 }
 
-/** Compact SOL, scaled so small and large deposits both stay readable. */
-export function formatSol(lamports: bigint): string {
-  const sol = solFromLamports(lamports);
-  if (sol === 0) return "0";
-  if (sol < 0.001) return "<0.001";
-  if (sol < 1) return sol.toFixed(3).replace(/0+$/, "").replace(/\.$/, "");
-  if (sol < 1000) return sol.toFixed(2).replace(/0+$/, "").replace(/\.$/, "");
-  return `${(sol / 1000).toFixed(1)}k`;
+/**
+ * A bond amount as a buyer reads it. Cents are shown below a hundred dollars,
+ * where they still change the decision, and dropped above it, where they only
+ * make the number harder to compare against an order total.
+ */
+export function formatUsd(units: bigint): string {
+  const usd = usdFromUnits(units);
+  if (usd === 0) return "$0";
+  if (usd < 0.01) return "<$0.01";
+  if (usd < 100) return `$${usd.toFixed(2).replace(/0$/, "").replace(/\.$/, "")}`;
+  return `$${Math.round(usd).toLocaleString("en-US")}`;
 }
 
 /** Shortens a base58 key to something a person can compare by eye. */

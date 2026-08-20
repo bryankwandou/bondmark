@@ -79,6 +79,6 @@ pub fn handler(
         .checked_add(1)
         .ok_or(BondmarkError::MathOverflow)?;
 
-    msg!("dispute #{} opened for {} lamports", index, amount);
+    msg!("dispute #{} opened for {} base units", index, amount);
     Ok(())
 }

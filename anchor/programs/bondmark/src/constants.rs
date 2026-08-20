@@ -4,6 +4,11 @@
 
 pub const SELLER_SEED: &[u8] = b"seller";
 
+/// PDA namespace for the token account that actually holds a seller's bond.
+/// Derived from the seller record, so a buyer can find the money from the handle
+/// alone without asking us where it lives.
+pub const VAULT_SEED: &[u8] = b"vault";
+
 /// PDA namespace for a single dispute filed against a seller.
 
 pub const DISPUTE_SEED: &[u8] = b"dispute";
@@ -12,8 +17,10 @@ pub const DISPUTE_SEED: &[u8] = b"dispute";
 /// kept short enough to stay readable and cheap to store.
 pub const MAX_HANDLE_LEN: usize = 32;
 
-/// Smallest deposit that earns a badge. Below this the guarantee is theatre.
-pub const MIN_BOND_LAMPORTS: u64 = 100_000_000; // 0.1 SOL
+/// Smallest deposit that earns a badge, in the bond mint's base units. USDC has
+/// six decimals, so this is 25 USDC — roughly one small order in the market this
+/// is built for. Below it the guarantee is theatre.
+pub const MIN_BOND_UNITS: u64 = 25_000_000;
 
 /// A seller who wants their money back has to announce it and wait. The delay is
 /// the whole point: it gives anyone who was wronged a window to file first.

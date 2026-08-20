@@ -71,10 +71,10 @@ export function HandleLookup({ autoFocus = false }: { autoFocus?: boolean }) {
             Nothing to install, no account needed. Try{" "}
             <button
               type="button"
-              onClick={() => setValue("warungmirna")}
+              onClick={() => setValue("warung.mirna")}
               className="underline decoration-rule-strong underline-offset-2 transition-colors hover:text-ink"
             >
-              warungmirna
+              warung.mirna
             </button>{" "}
             to see a live profile.
           </span>

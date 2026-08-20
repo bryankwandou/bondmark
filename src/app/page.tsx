@@ -14,8 +14,8 @@ import { scoreSeller } from "@/lib/score";
  */
 const SAMPLE = scoreSeller(
   {
-    bond: 4_200_000_000n,
-    lifetimeDeposited: 4_200_000_000n,
+    bond: 250_000_000n,
+    lifetimeDeposited: 250_000_000n,
     slashedTotal: 0n,
     registeredAt: 0,
     bondedSince: Math.floor(Date.now() / 1000) - 74 * 86_400,
@@ -94,7 +94,7 @@ function ProfilePreview() {
           <div>
             <div className="flex items-center gap-2">
               <LogoMark size={18} closed />
-              <span className="figure text-sm text-ink-soft">warungmirna</span>
+              <span className="figure text-sm text-ink-soft">warung.mirna</span>
             </div>
             <p className="display mt-2 text-3xl">Warung Mirna</p>
             <p className="mt-1 text-sm text-ink-soft">Skincare, Bandung</p>
@@ -103,7 +103,7 @@ function ProfilePreview() {
         </div>
 
         <dl className="mt-7 grid grid-cols-2 gap-px overflow-hidden rounded-xl border border-rule bg-rule">
-          <Stat label="Deposit locked" value="4.2 SOL" tone="bond" />
+          <Stat label="Deposit locked" value="$250" tone="bond" />
           <Stat label="Held for" value="74 days" />
           <Stat label="Claims filed" value="3" />
           <Stat label="Paid out" value="0" />
@@ -186,7 +186,7 @@ function Mechanism() {
   const steps = [
     {
       title: "The seller locks money they would rather keep",
-      body: "A deposit goes into the program and stops being spendable. The size is theirs to choose, and it is the first thing a buyer sees, so choosing a small one is its own answer.",
+      body: "A stablecoin deposit goes into the program and stops being spendable. It is held in dollars because a refund owed in rupiah is not covered by collateral that can lose a third of its value between the order and the complaint. The size is theirs to choose, and it is the first thing a buyer sees, so choosing a small one is its own answer.",
       chain: "deposit_bond",
     },
     {
@@ -262,7 +262,7 @@ function Scoring() {
 
         <div className="rounded-2xl border border-rule bg-surface p-7 shadow-[var(--shadow-card)]">
           <div className="flex items-center justify-between">
-            <span className="text-sm text-ink-soft">warungmirna</span>
+            <span className="text-sm text-ink-soft">warung.mirna</span>
             <span className="figure text-sm text-ink-faint">
               {SAMPLE.total} / 100
             </span>
@@ -324,7 +324,7 @@ function BadgeSection() {
           <div className="inline-flex items-center gap-3 rounded-xl border border-rule bg-paper px-4 py-3">
             <LogoMark size={26} closed />
             <div className="leading-tight">
-              <div className="text-[13px] font-medium">4.2 SOL bonded</div>
+              <div className="text-[13px] font-medium">$250 bonded</div>
               <div className="figure text-[11px] text-ink-soft">74 days · 0 paid out</div>
             </div>
           </div>
@@ -361,12 +361,12 @@ function Limits() {
         <div className="mt-8 space-y-6 text-[15px] leading-relaxed text-ink-soft">
           <p>
             It does not make a seller honest. It puts a price on dishonesty and shows
-            you what that price is. A deposit of half a SOL says very little about an
+            you what that price is. A deposit of $30 says very little about an
             order worth ten times that.
           </p>
           <p>
-            It does not cover you beyond the amount locked. If the deposit is 4 SOL,
-            4 SOL is the ceiling on what any claim can return, no matter how large the
+            It does not cover you beyond the amount locked. If the deposit is $250,
+            $250 is the ceiling on what any claim can return, no matter how large the
             order was or how many buyers file.
           </p>
           <p>

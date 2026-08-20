@@ -1,4 +1,5 @@
 use anchor_lang::prelude::*;
+use anchor_spl::token::{self, Token, TokenAccount, Transfer};
 
 use crate::constants::*;
 use crate::error::BondmarkError;
@@ -24,9 +25,23 @@ pub struct ResolveDispute<'info> {
     )]
     pub dispute: Account<'info, Dispute>,
 
-    /// CHECK: validated against the buyer recorded on the dispute account.
-    #[account(mut, address = dispute.buyer)]
-    pub buyer: UncheckedAccount<'info>,
+    #[account(
+        mut,
+        seeds = [VAULT_SEED, seller.key().as_ref()],
+        bump
+    )]
+    pub vault: Account<'info, TokenAccount>,
+
+    /// Where a upheld claim gets paid. Checked against the buyer recorded on the
+    /// dispute, so an arbiter cannot redirect the payout to themselves.
+    #[account(
+        mut,
+        constraint = buyer_token.owner == dispute.buyer @ BondmarkError::WrongBuyerAccount,
+        constraint = buyer_token.mint == seller.bond_mint @ BondmarkError::WrongBondMint
+    )]
+    pub buyer_token: Account<'info, TokenAccount>,
+
+    pub token_program: Program<'info, Token>,
 }
 
 pub fn handler(ctx: Context<ResolveDispute>, slash: bool) -> Result<()> {
@@ -41,11 +56,24 @@ pub fn handler(ctx: Context<ResolveDispute>, slash: bool) -> Result<()> {
     if slash {
         let payout = claim.min(ctx.accounts.seller.bond);
 
-        // The seller PDA is owned by this program, so its balance can be moved
-        // without a CPI. Rent stays untouched because only `bond` is ever spent.
-        let seller_ai = ctx.accounts.seller.to_account_info();
-        **seller_ai.try_borrow_mut_lamports()? -= payout;
-        **ctx.accounts.buyer.try_borrow_mut_lamports()? += payout;
+        // The vault's authority is the seller record, so the program signs for
+        // the payout and nobody with a keyboard can move it any other way.
+        let handle = ctx.accounts.seller.handle.clone();
+        let bump = ctx.accounts.seller.bump;
+        let signer_seeds: &[&[&[u8]]] = &[&[SELLER_SEED, handle.as_bytes(), &[bump]]];
+
+        token::transfer(
+            CpiContext::new_with_signer(
+                ctx.accounts.token_program.key(),
+                Transfer {
+                    from: ctx.accounts.vault.to_account_info(),
+                    to: ctx.accounts.buyer_token.to_account_info(),
+                    authority: ctx.accounts.seller.to_account_info(),
+                },
+                signer_seeds,
+            ),
+            payout,
+        )?;
 
         let seller = &mut ctx.accounts.seller;
         seller.bond = seller.bond.saturating_sub(payout);
@@ -64,7 +92,7 @@ pub fn handler(ctx: Context<ResolveDispute>, slash: bool) -> Result<()> {
         }
 
         ctx.accounts.dispute.status = DISPUTE_SLASHED;
-        msg!("dispute #{} slashed {} lamports", ctx.accounts.dispute.index, payout);
+        msg!("dispute #{} slashed {} base units", ctx.accounts.dispute.index, payout);
     } else {
         let seller = &mut ctx.accounts.seller;
         seller.disputes_dismissed = seller
